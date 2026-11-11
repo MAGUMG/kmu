@@ -66,7 +66,7 @@ label{font-size:13px;color:var(--sub)}
     <div class="tabs" id="dayTabs"></div>
     <p class="hours" id="hours"></p>
     <div id="meals"></div>
-    <p class="note">※ 서버가 없어 메뉴와 가격은 직접 입력합니다. 입력한 내용은 이 브라우저에 저장됩니다.</p>
+    <p class="note" id="menuNote"></p>
   </section>
 
   <section class="card" id="linkCard">
@@ -159,6 +159,22 @@ function safeUrl(u){
   try{const x=new URL(u);return /^https?:$/.test(x.protocol)?x.href:null}catch(e){return null}
 }
 
+let DORM=null,DORM_ERR='';
+fetch('menu.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()})
+  .then(j=>{DORM=j;render()}).catch(e=>{DORM_ERR=String(e.message||e);render()});
+function dormHtml(){
+  if(!DORM&&!DORM_ERR)return '<div class="meal"><span class="none">불러오는 중...</span></div>';
+  if(!DORM)return '<div class="meal"><span class="none">기숙사 메뉴를 불러오지 못했습니다. (menu.json 없음 또는 파일로 직접 연 경우)</span></div>';
+  const dd=(DORM.days||[]).find(x=>x.dow===DAYS[day]);
+  if(!dd)return '<div class="meal"><span class="none">이번 주 식단표에 '+DAYS[day]+'요일 메뉴가 없습니다.</span></div>';
+  const lunchNote=(day>=1&&day<=5)?'<span class="none">(평일 중식은 별도 식권)</span>':'';
+  const head=`<div class="meal"><span class="none">${esc(dd.date)} (${esc(dd.dow)})</span></div>`;
+  const body=MEALS.map(([k,n])=>{
+    const it=dd[{b:'breakfast',l:'lunch',d:'dinner'}[k]]||[];
+    return `<div class="meal"><b>${n}</b>${k==='l'?lunchNote:''}${it.length?`<ul>${it.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<span class="none">등록된 메뉴 없음</span>'}</div>`;
+  }).join('');
+  return head+body;
+}
 function render(){
   const d=new Date();
   $('today').textContent=`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${DAYS[d.getDay()]})`;
@@ -177,10 +193,8 @@ function render(){
     const items=(S.menu[place]||{}).items||[];
     $('meals').innerHTML=items.length?renderPaid(items):'<div class="meal"><span class="none">등록된 메뉴 없음</span></div>';
   } else
-  $('meals').innerHTML=p?MEALS.map(([k,n])=>{
-    const items=m[k]||[];
-    return `<div class="meal"><b>${n}</b>${items.length?`<ul>${items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<span class="none">등록된 메뉴 없음</span>'}</div>`;
-  }).join(''):'';
+  $('meals').innerHTML=p?dormHtml():'';
+  $('menuNote').innerHTML=paid?'※ 메뉴와 가격은 직접 입력한 값이며, 이 브라우저에 저장됩니다.':(DORM?`※ ${esc(DORM.title||'주간 식단표')} · 갱신 ${esc(DORM.updated||'')} · <a href="${esc(DORM.source||'#')}" target="_blank" rel="noopener noreferrer">원문 보기</a><br>식단은 부식 수급 사정에 따라 변경될 수 있습니다.`:'');
   // 링크
   $('links').innerHTML=S.links.map((l,i)=>`<div class="link"><a href="${esc(l.u)}" ${S.newTab?'target="_blank" rel="noopener noreferrer"':''}><span>${esc(l.i||'🔗')}</span>${esc(l.n)}</a></div>`).join('');}
 
@@ -215,9 +229,9 @@ function fillMenuForm(){
 }
 $('editMenuBtn').onclick=()=>{
   if(!S.places.length){alert('먼저 식당을 추가하세요.');return}
-  $('mPlace').innerHTML=S.places.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  $('mPlace').innerHTML=S.places.filter(p=>p.type==='paid').map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
   $('mDay').innerHTML=[1,2,3,4,5,6,0].map(i=>`<option value="${i}">${DAYS[i]}요일</option>`).join('');
-  $('mPlace').value=place;$('mDay').value=day;$('mAll').checked=false;
+  $('mPlace').value=isPaid(place)?place:S.places.find(p=>p.type==='paid').id;$('mDay').value=day;$('mAll').checked=false;
   fillMenuForm();$('menuDlg').showModal();
 };
 ['mPlace','mDay','mMeal'].forEach(id=>$(id).onchange=fillMenuForm);
