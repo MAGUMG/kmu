@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>계명대학교</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--text:#1f2937;--sub:#6b7280;--main:#2563eb;--line:#e5e7eb}
+@media(prefers-color-scheme:dark){:root{--bg:#111827;--card:#1f2937;--text:#f3f4f6;--sub:#9ca3af;--line:#374151}}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Pretendard","Malgun Gothic",sans-serif;background:var(--bg);color:var(--text)}
+header{padding:20px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+h1{margin:0;font-size:22px}
+#today{color:var(--sub);font-size:14px}
+main{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:0 24px 32px;max-width:1100px;margin:auto}
+@media(max-width:800px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border-radius:14px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{margin:0 0 12px;font-size:17px;display:flex;justify-content:space-between;align-items:center}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:8px;padding:6px 12px}
+button.primary{background:var(--main);color:#fff;border-color:var(--main)}
+button.small{padding:3px 8px;font-size:12px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tabs button.on{background:var(--main);color:#fff;border-color:var(--main)}
+.meal{border-top:1px solid var(--line);padding:10px 0}
+.meal b{display:inline-block;min-width:40px;color:var(--main)}
+.meal ul{margin:6px 0 0;padding-left:20px}
+.meal .none{color:var(--sub);font-size:14px;margin-left:6px}
+.hours{color:var(--sub);font-size:13px;margin:0 0 4px}
+.links{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.link{position:relative}
+.link a{display:block;text-decoration:none;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px 8px;text-align:center;font-size:14px}
+.link a:hover{border-color:var(--main)}
+.link a span{display:block;font-size:22px;margin-bottom:4px}
+.link .x{position:absolute;top:2px;right:2px;display:none;border:none;background:none;color:var(--sub)}
+.editing .link .x{display:block}
+dialog{border:none;border-radius:14px;padding:20px;width:min(440px,92vw);background:var(--card);color:var(--text)}
+dialog::backdrop{background:rgba(0,0,0,.4)}
+input,select,textarea{width:100%;font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);margin:4px 0 10px}
+textarea{height:110px}
+label{font-size:13px;color:var(--sub)}
+.row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.full{grid-column:1/-1}
+.corner{margin:8px 0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.corner summary{cursor:pointer;list-style:none;font-weight:700;font-size:14px;padding:10px 12px;background:var(--bg);display:flex;justify-content:space-between;align-items:center}
+.corner summary::-webkit-details-marker{display:none}
+.corner summary::after{content:'▾';transition:transform .15s;color:var(--sub)}
+.corner:not([open]) summary::after{transform:rotate(-90deg)}
+.corner summary small{font-weight:400;color:var(--sub);margin-left:8px}
+.corner .price:first-of-type{border-top:none}
+.corner .price{padding:10px 12px}
+.price{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding:10px 0}
+.price span:last-child{font-weight:600;color:var(--main);white-space:nowrap}
+.note{font-size:12px;color:var(--sub);margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>🎓 계명대학교</h1><div id="today"></div></div>
+  <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="newtab" style="width:auto;margin:0" checked> 링크를 새 탭에서 열기</label>
+</header>
+
+<main>
+  <section class="card" id="menuCard">
+    <h2>🍚 학식 메뉴 <span><button class="small" id="editMenuBtn">메뉴 수정</button></span></h2>
+    <div class="tabs" id="placeTabs"></div>
+    <div class="tabs" id="dayTabs"></div>
+    <p class="hours" id="hours"></p>
+    <div id="meals"></div>
+    <p class="note">※ 서버가 없어 메뉴와 가격은 직접 입력합니다. 입력한 내용은 이 브라우저에 저장됩니다.</p>
+  </section>
+
+  <section class="card" id="linkCard">
+    <h2>🔗 학교 바로가기</h2>
+    <div class="links" id="links"></div>
+  </section>
+</main>
+
+
+<!-- 메뉴 수정 -->
+<dialog id="menuDlg"><form method="dialog" id="menuForm">
+  <h3>메뉴 수정</h3>
+  <label>식당</label><select id="mPlace"></select>
+  <div id="mDayWrap"><label>요일</label><select id="mDay"></select>
+  <label>식사</label><select id="mMeal"><option value="b">조식</option><option value="l">중식</option><option value="d">석식</option></select></div>
+  <label id="mLabel">메뉴 (한 줄에 하나)</label><textarea id="mText"></textarea>
+  <label id="mAllWrap"><input type="checkbox" id="mAll" style="width:auto;margin:0"> 월~금 모두 같은 메뉴로 저장</label>
+  <div class="row"><button value="cancel" formnovalidate>닫기</button><button class="primary" value="ok">저장</button></div>
+</form></dialog>
+
+
+<script>
+const KEY='campusDash.v2';
+const DAYS=['일','월','화','수','목','금','토'];
+const MEALS=[['b','조식'],['l','중식'],['d','석식']];
+const DEFAULT={
+  newTab:true,
+  links:[
+    {n:'학교 홈페이지',u:'https://kmu.ac.kr/',i:'🏫'},
+    {n:'수강신청',u:'https://sugang.kmu.ac.kr/servlet/Fip',i:'📝'},
+    {n:'CTL',u:'https://ctl.kmu.ac.kr/index.jsp',i:'💻'},
+    {n:'Story+',u:'https://story.kmu.ac.kr/main.do',i:'📊'},
+    {n:'AI',u:'https://ai.kmu.ac.kr/',i:'🤖'},
+    {n:'공지사항',u:'https://www.example.ac.kr/notice',i:'📢'}
+  ],
+  places:[
+    {id:'p1',name:'바우어관',hours:'',type:'paid'},
+    {id:'p2',name:'신바우어관',hours:'',type:'paid'},
+    {id:'p3',name:'아람관',hours:'',type:'paid'},
+    {id:'p4',name:'공대식당',hours:'',type:'paid'},
+    {id:'p5',name:'기숙사식당',hours:'',type:'meal'}
+  ],
+  menu:{
+    p1:{items:[
+      {h:'A 코너'},
+      {n:'라면',p:3500},{n:'떡라면',p:4000},{n:'치즈라면',p:4000},{n:'만두라면',p:4000},{n:'땡초라면',p:4000},{n:'공기밥',p:1000},{n:'잔치국수',p:4500},
+      {h:'B 코너'},
+      {n:'김밥',p:3300},{n:'돈까스왕 김밥',p:4000},{n:'참치김밥',p:4000},
+      {h:'C 코너'},
+      {n:'된장찌개',p:4500},
+      {n:'차돌박이된장찌개',p:5800},{n:'김치돼지찌개',p:5000},{n:'순두부된장찌개',p:5000},{n:'된장찌개&비빔밥',p:5000},
+      {h:'D 코너'},
+      {n:'야채비빔밥',p:4500},
+      {n:'계란후라이',p:800},{n:'불고기야채비빔밥',p:5000},{n:'참치야채비빔밥',p:5000},{n:'김치불고기비빔밥&계란후라이',p:5500},{n:'김치참치비빔밥&계란후라이',p:5500},
+      {h:'F 코너'},
+      {n:'양념순살치밥',p:6000},
+      {n:'간장순살치밥',p:6000},{n:'돼지국밥',p:5500},
+      {h:'G 코너'},
+      {n:'카레덮밥',p:4500},
+      {n:'치킨마요덮밥',p:5000},
+      {n:'참치마요덮밥',p:5000},
+      {n:'매운김치날치알덮밥',p:5000},
+      {n:'제육덮밥',p:5500},
+      {n:'닭갈비덮밥',p:5500},
+      {n:'소불고기덮밥',p:6500},
+      {h:'H 코너'},
+      {n:'등심돈까스',p:5300},
+      {n:'매콤돈까스',p:5500},
+      {n:'카레돈까스',p:6000},
+      {n:'치즈돈까스',p:6000},
+      {n:'고구마돈까스',p:6000},
+      {n:'돈까스&오므라이스',p:6000},
+      {n:'매콤치즈돈까스',p:6300},
+      {n:'매콤고구마돈까스',p:6300},
+      {n:'후랑크소세지',p:1500}
+    ],ver:3}
+  }
+};
+let S=load(), place=S.places[0]?.id, day=new Date().getDay(), editing=false;
+const $=id=>document.getElementById(id);
+
+function load(){
+  try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.links){s.places.forEach(p=>{if(!p.type)p.type=(p.name==='기숙사식당')?'meal':'paid'});s.menu=s.menu||{};if(s.places.some(p=>p.id==='p1')){const m1=s.menu.p1=s.menu.p1||{};const it=m1.items||[];if((m1.ver||0)<3&&(!it.length||((it.length===10||it.length===32)&&it[1]&&it[1].n==='라면'))){m1.items=DEFAULT.menu.p1.items;m1.ver=3}}return s}}catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT));
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(S))}
+function esc(t){return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function safeUrl(u){
+  u=u.trim(); if(!/^https?:\/\//i.test(u)) u='https://'+u;
+  try{const x=new URL(u);return /^https?:$/.test(x.protocol)?x.href:null}catch(e){return null}
+}
+
+function render(){
+  const d=new Date();
+  $('today').textContent=`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${DAYS[d.getDay()]})`;
+  $('newtab').checked=S.newTab;
+  // 식당 탭
+  if(!S.places.find(p=>p.id===place)) place=S.places[0]?.id;
+  $('placeTabs').innerHTML=S.places.map(p=>`<button class="${p.id===place?'on':''}" data-p="${p.id}">${esc(p.name)}</button>`).join('')||'<span class="note">식당을 추가하세요</span>';
+  const curP=S.places.find(x=>x.id===place);
+  const paid=!!curP&&curP.type==='paid';
+  $('dayTabs').style.display=paid?'none':'flex';
+  $('dayTabs').innerHTML=[1,2,3,4,5,6,0].map(i=>`<button class="small ${i===day?'on':''}" data-d="${i}">${DAYS[i]}</button>`).join('');
+  const p=S.places.find(x=>x.id===place);
+  $('hours').textContent=(p&&p.hours)?'🕒 '+p.hours:'';
+  const m=(S.menu[place]||{})[day]||{};
+  if(paid){
+    const items=(S.menu[place]||{}).items||[];
+    $('meals').innerHTML=items.length?renderPaid(items):'<div class="meal"><span class="none">등록된 메뉴 없음</span></div>';
+  } else
+  $('meals').innerHTML=p?MEALS.map(([k,n])=>{
+    const items=m[k]||[];
+    return `<div class="meal"><b>${n}</b>${items.length?`<ul>${items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<span class="none">등록된 메뉴 없음</span>'}</div>`;
+  }).join(''):'';
+  // 링크
+  $('links').innerHTML=S.links.map((l,i)=>`<div class="link"><a href="${esc(l.u)}" ${S.newTab?'target="_blank" rel="noopener noreferrer"':''}><span>${esc(l.i||'🔗')}</span>${esc(l.n)}</a></div>`).join('');}
+
+$('placeTabs').onclick=e=>{const b=e.target.closest('[data-p]');if(b){place=b.dataset.p;render()}};
+$('dayTabs').onclick=e=>{const b=e.target.closest('[data-d]');if(b){day=+b.dataset.d;render()}};
+$('meals').addEventListener('toggle',e=>{const d=e.target;if(!d.dataset||!d.dataset.k)return;d.open?openC.add(d.dataset.k):openC.delete(d.dataset.k);try{sessionStorage.setItem('openC',JSON.stringify([...openC]))}catch(x){}},true);
+$('newtab').onchange=e=>{S.newTab=e.target.checked;save();render()};
+
+// 메뉴 수정
+const openC=new Set(JSON.parse(sessionStorage.getItem('openC')||'[]'));
+function renderPaid(items){
+  const row=x=>`<div class="price"><span>${esc(x.n)}</span><span>${x.p!=null?x.p.toLocaleString('ko-KR')+'원':''}</span></div>`;
+  let out='',cur=null;
+  const flush=()=>{if(!cur)return;const k=place+'|'+cur.h;out+=`<details class="corner" data-k="${esc(k)}" ${openC.has(k)?'open':''}><summary><span>${esc(cur.h)}<small>${cur.rows.length}개</small></span></summary>${cur.rows.map(row).join('')}</details>`;cur=null};
+  items.forEach(x=>{if(x.h){flush();cur={h:x.h,rows:[]}}else if(cur)cur.rows.push(x);else out+=row(x)});
+  flush();return out;
+}
+function isPaid(id){const p=S.places.find(x=>x.id===id);return !!p&&p.type==='paid'}
+function fillMenuForm(){
+  const pd=isPaid($('mPlace').value);
+  $('mDayWrap').style.display=pd?'none':'block';
+  $('mAllWrap').style.display=pd?'none':'block';
+  $('mLabel').textContent=pd?'메뉴와 가격 (한 줄에 하나, 예: 돈까스 6000, 코너는 < A 코너 >)':'메뉴 (한 줄에 하나)';
+  $('mText').placeholder=pd?'돈까스 6000\n김치찌개 5500':'';
+  if(pd){
+    const it=(S.menu[$('mPlace').value]||{}).items||[];
+    $('mText').value=it.map(x=>x.h?'< '+x.h+' >':(x.p!=null?x.n+' '+x.p:x.n)).join('\n');
+    return;
+  }
+  const m=((S.menu[$('mPlace').value]||{})[$('mDay').value]||{})[$('mMeal').value]||[];
+  $('mText').value=m.join('\n');
+}
+$('editMenuBtn').onclick=()=>{
+  if(!S.places.length){alert('먼저 식당을 추가하세요.');return}
+  $('mPlace').innerHTML=S.places.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  $('mDay').innerHTML=[1,2,3,4,5,6,0].map(i=>`<option value="${i}">${DAYS[i]}요일</option>`).join('');
+  $('mPlace').value=place;$('mDay').value=day;$('mAll').checked=false;
+  fillMenuForm();$('menuDlg').showModal();
+};
+['mPlace','mDay','mMeal'].forEach(id=>$(id).onchange=fillMenuForm);
+$('menuForm').onsubmit=e=>{
+  if(e.submitter?.value!=='ok')return;
+  const pid=$('mPlace').value,k=$('mMeal').value;
+  const items=$('mText').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if(isPaid(pid)){
+    const list=items.map(line=>{
+      const hm=line.match(/^<\s*(.*?)\s*>$/);if(hm)return {h:hm[1]};
+      const mm=line.match(/^(.*?)[\s,:]+([\d,]+)\s*원?$/);
+      if(mm&&mm[1].trim())return {n:mm[1].trim(),p:parseInt(mm[2].replace(/,/g,''),10)};
+      return {n:line,p:null};
+    });
+    S.menu[pid]=S.menu[pid]||{};S.menu[pid].items=list;
+    place=pid;save();render();return;
+  }
+  const days=$('mAll').checked?[1,2,3,4,5]:[+$('mDay').value];
+  S.menu[pid]=S.menu[pid]||{};
+  days.forEach(d=>{S.menu[pid][d]=S.menu[pid][d]||{};S.menu[pid][d][k]=items});
+  place=pid;save();render();
+};
+
+render();
+</script>
+</body>
+</html>
