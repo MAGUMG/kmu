@@ -2,8 +2,8 @@ name: 기숙사 메뉴 갱신
 
 on:
   schedule:
-    - cron: "0 22 * * *"   # 한국 시간 매일 오전 7시
-  workflow_dispatch:        # 손으로 바로 실행하는 버튼
+    - cron: "0 0 * * *"   # 한국 시간 매일 오전 9시
+  workflow_dispatch:       # 손으로 바로 실행하는 버튼
 
 permissions:
   contents: write
