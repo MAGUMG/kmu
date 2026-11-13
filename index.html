@@ -93,6 +93,34 @@ label{font-size:13px;color:var(--sub)}
 .xtra{margin-top:10px;font-size:13px}
 .xtra .chip{display:inline-block;margin:3px 4px 0 0;padding:3px 9px;border-radius:14px;color:#fff;font-size:12px;cursor:pointer}
 .note{font-size:12px;color:var(--sub);margin-top:8px}
+
+.wd .row{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.wd .row:first-of-type{border-top:0}
+.wd .tm{color:var(--sub);font-size:12.5px}
+.wd .st{font-size:11.5px;border-radius:10px;padding:2px 8px;border:1px solid var(--line);color:var(--sub);white-space:nowrap}
+.wd .st.now{background:#16a34a;color:#fff;border-color:#16a34a}
+.wd .st.next{background:var(--main);color:#fff;border-color:var(--main)}
+.wd .cdot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.wd .row.done{opacity:.5}
+.sw .dir{border-top:1px solid var(--line);padding:8px 0}
+.sw .dir:first-of-type{border-top:0}
+.sw .big{font-size:22px;font-weight:700;color:var(--main)}
+.sw .sm{font-size:12.5px;color:var(--sub)}
+.sw .nx{display:flex;gap:14px;flex-wrap:wrap;align-items:baseline;margin-top:2px}
+.sw .tbl{display:grid;grid-template-columns:44px 1fr;gap:2px 8px;font-size:12.5px;margin-top:6px}
+.sw .tbl b{color:var(--sub)}
+.sw .tbl .past{opacity:.35}
+.sw .tbl .nxt{color:#fff;background:var(--main);border-radius:4px;padding:0 3px}
+.pk .res{margin-top:10px;border:2px dashed var(--main);border-radius:12px;padding:14px;text-align:center}
+.pk .res .nm{font-size:20px;font-weight:700}
+.pk .res .pr{color:var(--main);font-weight:700;font-size:16px;margin-top:2px}
+.pk .res .where{color:var(--sub);font-size:13px;margin-top:2px}
+.pk .ctl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.pk .ctl label{font-size:12.5px;color:var(--sub);display:block}
+.pk .ctl select,.pk .ctl input[type=text]{margin:3px 0 0;font-size:13px}
+.pk .chk{display:flex;align-items:center;gap:6px;font-size:12.5px;margin:4px 0}
+.pk .chk input{width:auto;margin:0}
+.pk .lst{max-height:260px;overflow-y:auto;margin-top:10px;font-size:13px}
 </style>
 </head>
 <body>
@@ -102,6 +130,19 @@ label{font-size:13px;color:var(--sub)}
 </header>
 
 <main>
+  <section class="card wd" id="todayCard">
+    <h2>📍 오늘의 수업</h2>
+    <div id="todayBody"></div>
+  </section>
+
+  <section class="card sw" id="subwayCard">
+    <h2>🚇 지하철 2호선 <span class="sm" id="swNow"></span></h2>
+    <div class="tabs" id="swSt"></div>
+    <div class="tabs" id="swDay"></div>
+    <div id="swBody"></div>
+    <p class="note" id="swNote"></p>
+  </section>
+
   <section class="card" id="menuCard">
     <h2>🍚 학식 메뉴 <span><button class="small" id="editMenuBtn">메뉴 수정</button></span></h2>
     <div class="tabs" id="placeTabs"></div>
@@ -114,6 +155,21 @@ label{font-size:13px;color:var(--sub)}
   <section class="card" id="linkCard">
     <h2>🔗 학교 바로가기</h2>
     <div class="links" id="links"></div>
+  </section>
+
+  <section class="card full pk" id="pickCard">
+    <h2>🎲 학식 고르기 도우미 <span class="sm" style="font-size:12px;font-weight:400;color:var(--sub)">유료 식당 4곳 · 등록된 메뉴 기준</span></h2>
+    <div class="ctl">
+      <div><label>식당</label><select id="pkPlace"></select></div>
+      <div><label>최대 가격</label><select id="pkMax"><option value="0">제한 없음</option><option>3500</option><option>4000</option><option>4500</option><option>5000</option><option>5500</option><option>6000</option></select></div>
+      <div><label>이 말이 들어간 메뉴만 (예: 라면, 돈까스)</label><input type="text" id="pkIn" placeholder="비워 두면 전체"></div>
+      <div><label>이 말이 들어간 메뉴 빼기 (예: 라면)</label><input type="text" id="pkOut" placeholder="비워 두면 없음"></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="pkSide" checked> 사이드 메뉴 빼기 (공기밥, 계란후라이, 후랑크소세지, 감자튀김 등)</label>
+    <label class="chk"><input type="checkbox" id="pkDay" checked> 오늘 요일에 안 파는 메뉴 빼기 (이름에 (화/목) 같은 표시가 있는 메뉴)</label>
+    <div style="display:flex;gap:8px;margin-top:8px;align-items:center"><button class="primary" id="pkGo">🎲 오늘 뭐 먹지?</button><span class="sm" id="pkCnt" style="font-size:12.5px;color:var(--sub)"></span></div>
+    <div class="res" id="pkRes" hidden></div>
+    <details style="margin-top:8px"><summary style="cursor:pointer;font-size:13px;color:var(--sub)">조건에 맞는 메뉴 전체 보기</summary><div class="lst" id="pkList"></div></details>
   </section>
 
   <section class="card full" id="ttCard">
@@ -223,14 +279,92 @@ const DEFAULT={
       {n:'매콤치즈돈까스',p:6300},
       {n:'매콤고구마돈까스',p:6300},
       {n:'후랑크소세지',p:1500}
-    ],ver:3}
+    ],ver:3},
+    p3:{items:[{h:'한식 · 찌개/뚝배기류'},
+      {n:'비빔밥 된장찌개',p:4500},
+      {n:'순두부찌개',p:4800},
+      {n:'대게장 순두부찌개',p:5300},
+      {n:'부대찌개',p:5000},
+      {n:'뚝배기소불고기',p:5500},
+      {n:'김치짜글이',p:4800},
+      {n:'양념갈비찜',p:5500},
+      {n:'치즈양념갈비찜',p:6200},
+      {n:'돌솥치즈불닭',p:5300},
+      {n:'돌솥핫치즈불닭',p:5500},
+      {n:'돌솥양념불고기',p:5000},
+      {n:'돌솥치즈불고기',p:5300},
+      {n:'참치알밥',p:4500},
+      {n:'치즈알밥',p:4500},
+      {n:'참치즈알밥',p:5000},
+      {n:'김치볶음밥(화/목)',p:4800},
+      {n:'김치치즈볶음밥(화/목)',p:5300},
+      {h:'한식 · 분식류'},
+      {n:'떡라면',p:3000},
+      {n:'라면밥',p:3800},
+      {n:'얼큰이라면',p:3200},
+      {n:'만두라면',p:3200},
+      {n:'치즈라면',p:3200},
+      {n:'스폐셜떡볶이',p:4700},
+      {n:'스폐셜치즈떡볶이',p:5700},
+      {n:'만두전골(공기밥포함)',p:5000},
+      {h:'한식 · 분식류(계절메뉴)'},
+      {n:'우동',p:3800},
+      {n:'잔치국수',p:4000},
+      {n:'물냉면',p:4000},
+      {n:'비빔냉면',p:4500},
+      {n:'반반냉면',p:4800},
+      {n:'쫄면',p:4000},
+      {h:'한식 · 덮밥류'},
+      {n:'치킨마요',p:5000},
+      {n:'핫치킨마요',p:5300},
+      {n:'즉석돈불고기덮밥(금)',p:5300},
+      {n:'즉석고추장불고기덮밥(화/목)',p:5300},
+      {n:'대패삼겹덮밥(월/수)',p:5500},
+      {n:'수제치킨가스덮밥',p:6000},
+      {h:'양식 · 돈까스류'},
+      {n:'치반,돈반',p:6300},
+      {n:'고반,돈반',p:6300},
+      {n:'수제곱빼기',p:6000},
+      {n:'고구마치즈돈까스',p:5500},
+      {n:'치즈돈까스',p:5500},
+      {n:'수제돈까스',p:5000},
+      {n:'고구마치즈돈까스(단품)',p:4000},
+      {n:'치즈돈까스(단품)',p:4000},
+      {n:'수제돈까스(단품)',p:3800},
+      {n:'순살치킨까스',p:5500},
+      {n:'순살치킨까스(단품)',p:4000},
+      {h:'양식 · 라이스류'},
+      {n:'카레라이스',p:4500},
+      {n:'불고기라이스',p:5000},
+      {n:'떡갈비라이스',p:5500},
+      {n:'떡갈비라이스(단품)',p:4000},
+      {n:'돈까스마요',p:5500},
+      {n:'치킨까스마요',p:5500},
+      {h:'양식 · 스파게티류'},
+      {n:'토마토베이컨스파게티+콜라',p:5000},
+      {n:'토마토해산물스파게티+콜라',p:5000},
+      {n:'베이컨까르보나라스파게티+콜라',p:5000},
+      {n:'체다치즈로제스파게티+콜라',p:5500},
+      {n:'해산물크림스파게티+콜라',p:5000},
+      {h:'양식 · 분식류'},
+      {n:'물냉면',p:5000},
+      {n:'비빔냉면',p:5000},
+      {n:'잔치국수',p:3800},
+      {n:'우동',p:3500},
+      {n:'콩나물신라면',p:3500},
+      {n:'라면밥',p:3500},
+      {n:'만두라면',p:3500},
+      {n:'치즈라면',p:3500},
+      {n:'떡라면',p:3200},
+      {n:'비빔만두',p:3500},
+      {n:'감자튀김',p:2500}],ver:1}
   }
 };
 let S=load(), place=S.places[0]?.id, day=new Date().getDay(), editing=false;
 const $=id=>document.getElementById(id);
 
 function load(){
-  try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.links){s.places.forEach(p=>{if(!p.type)p.type=(p.name==='기숙사식당')?'meal':'paid'});s.menu=s.menu||{};if(s.places.some(p=>p.id==='p1')){const m1=s.menu.p1=s.menu.p1||{};const it=m1.items||[];if((m1.ver||0)<3&&(!it.length||((it.length===10||it.length===32)&&it[1]&&it[1].n==='라면'))){m1.items=DEFAULT.menu.p1.items;m1.ver=3}}return s}}catch(e){}
+  try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.links){s.places.forEach(p=>{if(!p.type)p.type=(p.name==='기숙사식당')?'meal':'paid'});s.menu=s.menu||{};if(s.places.some(p=>p.id==='p1')){const m1=s.menu.p1=s.menu.p1||{};const it=m1.items||[];if((m1.ver||0)<3&&(!it.length||((it.length===10||it.length===32)&&it[1]&&it[1].n==='라면'))){m1.items=DEFAULT.menu.p1.items;m1.ver=3}}if(s.places.some(p=>p.id==='p3')){const m3=s.menu.p3=s.menu.p3||{};if(!(m3.items||[]).length){m3.items=DEFAULT.menu.p3.items;m3.ver=1}}return s}}catch(e){}
   return JSON.parse(JSON.stringify(DEFAULT));
 }
 function save(){localStorage.setItem(KEY,JSON.stringify(S))}
@@ -464,6 +598,106 @@ $('ttForm').onsubmit=e=>{
   save();render();
 };
 render();
+})();
+</script>
+<script>
+// ===== 오늘의 수업 · 지하철 · 학식 고르기 =====
+(function(){
+const $=id=>document.getElementById(id);
+const E=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const F=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+const DN=['월','화','수','목','금','토','일'];
+const todayIdx=()=>(new Date().getDay()+6)%7;
+const nowMin=()=>{const d=new Date();return d.getHours()*60+d.getMinutes()+d.getSeconds()/60};
+
+// --- 오늘의 수업 ---
+function renderToday(){
+  let list=[];try{list=JSON.parse(localStorage.getItem('kmuTimetable.v1'))||[]}catch(e){}
+  const di=todayIdx(),n=nowMin();
+  const rows=[];
+  list.forEach(c=>{if(c.cand)return;let sl=c.slots;if(!sl)sl=(c.days||[]).map(d=>({d,s:c.s,e:c.e,room:c.room||''}));
+    (sl||[]).forEach(x=>{if(x.d===di)rows.push({name:c.name,s:x.s,e:x.e,room:x.room||'',color:c.color||'#2563eb',prof:c.prof||''})})});
+  rows.sort((a,b)=>a.s-b.s);
+  const el=$('todayBody');
+  if(!list.length){el.innerHTML='<p class="note">시간표가 비어 있습니다. 아래 "시간표 짜기"에서 강좌를 담으면 여기에 오늘 수업이 나옵니다.</p>';return}
+  if(!rows.length){const nd=[];for(let k=1;k<=7;k++){const d=(di+k)%7;let f=null;list.forEach(c=>{if(c.cand)return;(c.slots||[]).forEach(x=>{if(x.d===d&&(!f||x.s<f.s))f={s:x.s,name:c.name}})});if(f){nd.push(`다음 수업은 <b>${DN[d]}요일 ${F(f.s)} ${E(f.name)}</b>입니다.`);break}}
+    el.innerHTML=`<p style="margin:0">🎉 오늘(${DN[di]})은 수업이 없습니다.</p><p class="note">${nd[0]||''}</p>`;return}
+  let nextDone=false;
+  const html=rows.map(r=>{let st='',cls='';
+    if(n>=r.e){st='<span class="st">끝남</span>';cls='done'}
+    else if(n>=r.s){st=`<span class="st now">수업 중 · ${Math.ceil(r.e-n)}분 남음</span>`}
+    else if(!nextDone){nextDone=true;const w=Math.ceil(r.s-n);st=`<span class="st next">${w>=60?Math.floor(w/60)+'시간 '+(w%60?w%60+'분 ':''):w+'분 '}후</span>`}
+    else st='<span class="st">예정</span>';
+    return `<div class="row ${cls}"><div><span class="cdot" style="background:${E(r.color)}"></span><b>${E(r.name)}</b><div class="tm">${F(r.s)}~${F(r.e)}${r.room?' · '+E(r.room):''}</div></div>${st}</div>`}).join('');
+  const done=rows.every(r=>n>=r.e);
+  el.innerHTML=`<div class="tm" style="margin-bottom:2px">${DN[di]}요일 · 확정 과목 ${rows.length}개${done?' · 오늘 수업 끝!':''}</div>`+html;
+}
+
+// --- 지하철 ---
+const SUB={"gm":{"wk":{"up":[360,375,386,397,407,417,427,437,447,457,465,473,480,486,492,498,504,509,514,519,524,529,534,539,544,549,554,559,564,569,575,581,587,594,601,608,615,622,629,636,643,650,657,665,673,681,689,697,705,713,721,729,737,745,753,761,769,777,785,793,801,809,817,825,833,841,849,857,865,873,881,889,897,905,913,921,929,937,945,953,961,969,977,985,993,1001,1008,1015,1022,1029,1036,1043,1050,1057,1064,1070,1076,1081,1086,1091,1096,1101,1106,1111,1116,1121,1126,1131,1136,1141,1146,1151,1156,1161,1166,1172,1179,1186,1193,1200,1207,1215,1223,1231,1239,1247,1255,1263,1271,1279,1287,1295,1303,1311,1319,1327,1336,1345,1354,1363,1372,1381,1390,1400,1410,1420,1431],"dn":[339,349,359,366,373,380,387,394,400,406,412,417,422,427,432,437,442,447,452,457,462,467,472,477,482,487,493,499,505,511,517,524,531,538,545,552,559,566,573,580,587,594,601,608,615,623,631,639,647,655,663,671,679,687,695,703,711,719,727,735,743,751,759,767,775,783,791,799,807,815,823,831,839,847,855,863,871,879,887,895,903,911,919,927,935,943,951,959,967,974,981,987,993,999,1004,1009,1014,1019,1024,1029,1034,1039,1044,1049,1054,1059,1064,1069,1074,1079,1084,1090,1097,1105,1113,1121,1129,1137,1145,1153,1161,1169,1177,1185,1193,1201,1209,1218,1227,1236,1245,1254,1263,1272,1281,1290,1299,1309,1319,1329,1339,1350,1361,1372,1383,1394,1409]},"sa":{"up":[360,375,386,397,408,419,429,439,449,459,469,479,489,498,507,516,525,534,543,552,561,570,579,588,597,606,614,622,630,638,646,654,662,670,678,686,694,702,710,718,726,734,742,750,758,766,774,782,790,798,806,814,822,829,836,842,848,854,860,866,872,878,884,890,896,902,908,914,920,926,932,938,944,951,958,966,974,982,990,998,1006,1014,1022,1030,1038,1046,1054,1062,1070,1078,1086,1094,1102,1109,1115,1121,1127,1133,1139,1145,1151,1157,1163,1169,1175,1181,1187,1193,1199,1205,1211,1217,1223,1229,1235,1241,1247,1253,1260,1267,1275,1283,1291,1299,1307,1315,1323,1331,1339,1347,1355,1363,1372,1381,1390,1400,1410,1420,1431],"dn":[339,349,359,369,379,389,398,407,416,425,434,442,450,458,466,474,482,490,498,506,514,522,530,538,546,554,562,570,578,586,594,602,610,618,626,634,642,650,658,666,674,682,690,698,706,714,722,730,738,746,753,760,766,772,778,784,790,796,802,808,814,820,826,832,838,844,850,856,862,868,874,882,890,898,906,914,922,930,938,946,954,962,970,978,986,994,1002,1010,1018,1026,1033,1039,1045,1051,1057,1063,1069,1075,1081,1087,1093,1099,1105,1111,1117,1123,1129,1135,1141,1147,1153,1159,1167,1175,1183,1191,1199,1207,1215,1223,1231,1239,1247,1256,1265,1274,1283,1292,1301,1310,1319,1329,1339,1350,1361,1372,1383,1394,1409]},"ho":{"up":[360,375,386,397,408,419,429,439,449,459,469,479,489,499,509,519,529,539,549,559,569,579,589,599,608,617,626,635,644,653,662,671,680,689,698,707,716,725,734,742,750,758,766,774,782,790,798,806,814,822,830,838,846,854,862,870,878,886,894,902,910,918,926,934,942,950,958,966,974,982,990,998,1006,1014,1022,1030,1038,1046,1054,1062,1070,1078,1086,1094,1102,1110,1118,1126,1134,1142,1150,1158,1166,1174,1182,1190,1198,1206,1214,1222,1230,1238,1246,1255,1264,1273,1282,1291,1300,1309,1318,1327,1336,1345,1354,1363,1372,1381,1390,1400,1410,1420,1431],"dn":[339,349,359,369,379,389,398,407,416,425,434,443,452,461,470,479,488,497,506,515,524,533,542,551,560,569,578,587,596,605,614,623,632,641,650,658,666,674,682,690,698,706,714,722,730,738,746,754,762,770,778,786,794,802,810,818,826,834,842,850,858,866,874,882,890,898,906,914,922,930,938,946,954,962,970,978,986,994,1002,1010,1018,1026,1034,1042,1050,1058,1067,1076,1085,1094,1103,1112,1121,1130,1139,1148,1157,1166,1175,1184,1193,1202,1211,1220,1229,1238,1247,1256,1265,1274,1283,1292,1301,1310,1319,1329,1339,1350,1361,1372,1383,1394,1409]}},"gc":{"wk":{"up":[362,377,388,399,409,419,429,439,449,459,467,475,482,488,494,500,506,511,516,521,526,531,536,541,546,551,556,561,566,571,577,583,589,596,603,610,617,624,631,638,645,652,659,667,675,683,691,699,707,715,723,731,739,747,755,763,771,779,787,795,803,811,819,827,835,843,851,859,867,875,883,891,899,907,915,923,931,939,947,955,963,971,979,987,995,1003,1010,1017,1024,1031,1038,1045,1052,1059,1066,1072,1078,1083,1088,1093,1098,1103,1108,1113,1118,1123,1128,1133,1138,1143,1148,1153,1158,1163,1168,1174,1181,1188,1195,1202,1209,1217,1225,1233,1241,1249,1257,1265,1273,1281,1289,1297,1305,1313,1321,1329,1338,1347,1356,1365,1374,1383,1392,1402,1412,1422,1433],"dn":[337,347,357,364,371,378,385,392,398,404,410,415,420,425,430,435,440,445,450,455,460,465,470,475,480,485,491,497,503,509,515,522,529,536,543,550,557,564,571,578,585,592,599,606,613,621,629,637,645,653,661,669,677,685,693,701,709,717,725,733,741,749,757,765,773,781,789,797,805,813,821,829,837,845,853,861,869,877,885,893,901,909,917,925,933,941,949,957,965,972,979,985,991,997,1002,1007,1012,1017,1022,1027,1032,1037,1042,1047,1052,1057,1062,1067,1072,1077,1082,1088,1095,1103,1111,1119,1127,1135,1143,1151,1159,1167,1175,1183,1191,1199,1207,1216,1225,1234,1243,1252,1261,1270,1279,1288,1297,1307,1317,1327,1337,1348,1359,1370,1381,1392,1407]},"sa":{"up":[362,377,388,399,410,421,431,441,451,461,471,481,491,500,509,518,527,536,545,554,563,572,581,590,599,608,616,624,632,640,648,656,664,672,680,688,696,704,712,720,728,736,744,752,760,768,776,784,792,800,808,816,824,831,838,844,850,856,862,868,874,880,886,892,898,904,910,916,922,928,934,940,946,953,960,968,976,984,992,1000,1008,1016,1024,1032,1040,1048,1056,1064,1072,1080,1088,1096,1104,1111,1117,1123,1129,1135,1141,1147,1153,1159,1165,1171,1177,1183,1189,1195,1201,1207,1213,1219,1225,1231,1237,1243,1249,1255,1262,1269,1277,1285,1293,1301,1309,1317,1325,1333,1341,1349,1357,1365,1374,1383,1392,1402,1412,1422,1433],"dn":[337,347,357,367,377,387,396,405,414,423,432,440,448,456,464,472,480,488,496,504,512,520,528,536,544,552,560,568,576,584,592,600,608,616,624,632,640,648,656,664,672,680,688,696,704,712,720,728,736,744,751,758,764,770,776,782,788,794,800,806,812,818,824,830,836,842,848,854,860,866,872,880,888,896,904,912,920,928,936,944,952,960,968,976,984,992,1000,1008,1016,1024,1031,1037,1043,1049,1055,1061,1067,1073,1079,1085,1091,1097,1103,1109,1115,1121,1127,1133,1139,1145,1151,1157,1165,1173,1181,1189,1197,1205,1213,1221,1229,1237,1245,1254,1263,1272,1281,1290,1299,1308,1317,1327,1337,1348,1359,1370,1381,1392,1407]},"ho":{"up":[362,377,388,399,410,421,431,441,451,461,471,481,491,501,511,521,531,541,551,561,571,581,591,601,610,619,628,637,646,655,664,673,682,691,700,709,718,727,736,744,752,760,768,776,784,792,800,808,816,824,832,840,848,856,864,872,880,888,896,904,912,920,928,936,944,952,960,968,976,984,992,1000,1008,1016,1024,1032,1040,1048,1056,1064,1072,1080,1088,1096,1104,1112,1120,1128,1136,1144,1152,1160,1168,1176,1184,1192,1200,1208,1216,1224,1232,1240,1248,1257,1266,1275,1284,1293,1302,1311,1320,1329,1338,1347,1356,1365,1374,1383,1392,1402,1412,1422,1433],"dn":[337,347,357,367,377,387,396,405,414,423,432,441,450,459,468,477,486,495,504,513,522,531,540,549,558,567,576,585,594,603,612,621,630,639,648,656,664,672,680,688,696,704,712,720,728,736,744,752,760,768,776,784,792,800,808,816,824,832,840,848,856,864,872,880,888,896,904,912,920,928,936,944,952,960,968,976,984,992,1000,1008,1016,1024,1032,1040,1048,1056,1065,1074,1083,1092,1101,1110,1119,1128,1137,1146,1155,1164,1173,1182,1191,1200,1209,1218,1227,1236,1245,1254,1263,1272,1281,1290,1299,1308,1317,1327,1337,1348,1359,1370,1381,1392,1407]}}};
+const ST={gm:'계명대',gc:'강창'};
+let st='gm',dt=null;
+const autoDay=()=>{const d=new Date().getDay();return d===0?'ho':d===6?'sa':'wk'};
+const DL={wk:'평일',sa:'토요일',ho:'일·공휴일'};
+function nextOf(arr,n,k){const r=[];for(const m of arr){if(m>n){r.push(m);if(r.length>=k)break}}return r}
+function dest(stn,dir,m){if(dir==='up')return '문양';const last={gm:23*60+29,gc:23*60+27}[stn];return m===last?'수성구청':'영남대'}
+function renderSub(){
+  const type=dt||autoDay(),n=nowMin();
+  $('swNow').textContent=F(Math.floor(n))+' 기준';
+  $('swSt').innerHTML=Object.keys(ST).map(k=>`<button class="${k===st?'on':''}" data-s="${k}">${ST[k]}역</button>`).join('');
+  $('swDay').innerHTML=['wk','sa','ho'].map(k=>`<button class="small ${k===type?'on':''}" data-d="${k}">${DL[k]}${k===autoDay()&&!dt?' (오늘)':''}</button>`).join('');
+  const dirs=[['up','문양 방면'],['dn','영남대 방면']];
+  $('swBody').innerHTML=dirs.map(([d,lab])=>{
+    const arr=SUB[st][type][d];
+    const live=!dt||dt===autoDay();
+    const nx=live?nextOf(arr,n,3):arr.slice(0,3);
+    let big;
+    if(!live){big=`<span class="sm">첫차 ${F(arr[0])} · 막차 ${F(arr[arr.length-1])}</span>`}
+    else if(!nx.length){big=`<span class="big" style="font-size:16px">오늘 운행 종료</span> <span class="sm">막차 ${F(arr[arr.length-1])}</span>`}
+    else{const w=Math.ceil(nx[0]-n);big=`<span class="big">${w<=0?'곧 도착':w+'분 후'}</span> <span class="sm">${F(nx[0])} ${dest(st,d,nx[0])}행</span>`;
+      if(nx[1])big+=`<div class="sm">다음 ${nx.slice(1).map(m=>F(m)+' ('+dest(st,d,m)+'행)').join(' · ')}</div>`}
+    const byH={};arr.forEach(m=>{(byH[Math.floor(m/60)]=byH[Math.floor(m/60)]||[]).push(m)});
+    const nm=live?nx[0]:null;
+    const tbl=Object.keys(byH).map(h=>`<b>${String(h).padStart(2,'0')}시</b><span>${byH[h].map(m=>{const c=nm===m?'nxt':(live&&m<=n?'past':'');return `<span class="${c}">${String(m%60).padStart(2,'0')}</span>`}).join(' ')}</span>`).join('');
+    return `<div class="dir"><b>${lab}</b><div class="nx">${big}</div><details><summary class="sm" style="cursor:pointer;margin-top:4px">${DL[type]} 전체 시간표 (${arr.length}회)</summary><div class="tbl">${tbl}</div></details></div>`}).join('');
+  $('swNote').innerHTML='※ 대구교통공사 시간표(2026.10.01 확인본) 기준, 평일·토요일·일요일/공휴일별로 나뉩니다. 공휴일은 자동으로 알 수 없으니 "일·공휴일" 버튼을 눌러 주세요. 강창역 토요일·일요일 시간은 계명대역 시간에서 ±2분으로 계산한 값입니다. 마지막 열차는 수성구청행입니다. 실제 운행은 역 게시 시간표와 공지를 확인하세요.';
+}
+$('swSt').onclick=e=>{const b=e.target.closest('[data-s]');if(b){st=b.dataset.s;renderSub()}};
+$('swDay').onclick=e=>{const b=e.target.closest('[data-d]');if(b){dt=(b.dataset.d===autoDay()&&dt===null)?null:b.dataset.d;if(dt===autoDay())dt=null;renderSub()}};
+
+// --- 학식 고르기 ---
+const SIDE=/^(공기밥|계란후라이|후랑크소세지|감자튀김)/;
+function menus(){
+  const out=[];if(typeof S==='undefined')return out;
+  S.places.filter(p=>p.type==='paid').forEach(p=>{const it=((S.menu[p.id]||{}).items)||[];let corner='';
+    it.forEach(x=>{if(x.h){corner=x.h;return}if(x.n&&x.p!=null)out.push({place:p.id,pname:p.name,corner,n:x.n,p:x.p})})});
+  return out;
+}
+function dayOK(name){const m=name.match(/\(([월화수목금토일\/]+)\)/);if(!m)return true;return m[1].split('/').includes(DN[todayIdx()])}
+function filt(){
+  const pl=$('pkPlace').value,mx=+$('pkMax').value,inn=$('pkIn').value.trim(),out=$('pkOut').value.trim();
+  return menus().filter(m=>(!pl||m.place===pl)&&(!mx||m.p<=mx)&&(!inn||m.n.includes(inn))&&(!out||!m.n.includes(out))&&(!$('pkSide').checked||!SIDE.test(m.n))&&(!$('pkDay').checked||dayOK(m.n)));
+}
+function pkInit(){
+  const ps=(typeof S!=='undefined'?S.places.filter(p=>p.type==='paid'):[]);
+  $('pkPlace').innerHTML='<option value="">전체 식당</option>'+ps.map(p=>`<option value="${E(p.id)}">${E(p.name)}</option>`).join('');
+  upd();
+}
+function upd(){const r=filt();$('pkCnt').textContent=r.length+'개 메뉴가 조건에 맞습니다';
+  $('pkList').innerHTML=r.map(m=>`<div class="price"><span>${E(m.pname)} · ${E(m.corner)} · ${E(m.n)}</span><span>${m.p.toLocaleString('ko-KR')}원</span></div>`).join('')||'<span class="note">조건에 맞는 메뉴가 없습니다</span>'}
+['pkPlace','pkMax','pkSide','pkDay'].forEach(i=>$(i).onchange=upd);['pkIn','pkOut'].forEach(i=>$(i).oninput=upd);
+$('pkGo').onclick=()=>{const r=filt(),el=$('pkRes');el.hidden=false;
+  if(!r.length){el.innerHTML='<div class="where">조건에 맞는 메뉴가 없습니다. 조건을 풀어 보세요.</div>';return}
+  const m=r[Math.floor(Math.random()*r.length)];
+  el.innerHTML=`<div class="where">오늘의 추천</div><div class="nm">${E(m.n)}</div><div class="pr">${m.p.toLocaleString('ko-KR')}원</div><div class="where">${E(m.pname)} · ${E(m.corner)}</div>`;
+  $('pkGo').textContent='🎲 다시 뽑기'};
+
+pkInit();renderToday();renderSub();
+setInterval(()=>{renderToday();renderSub()},30000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderToday();renderSub()}});
+window.addEventListener('storage',e=>{if(e.key==='kmuTimetable.v1')renderToday()});
+// 시간표를 고칠 때 같은 화면에서도 갱신되도록 저장 호출을 감시
+const _set=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){_set.call(this,k,v);if(k==='kmuTimetable.v1')renderToday()};
 })();
 </script>
 </body>
