@@ -131,12 +131,12 @@ label{font-size:13px;color:var(--sub)}
 
 <main>
   <section class="card wd" id="todayCard">
-    <h2>📍 오늘의 수업</h2>
+    <h2>📍 오늘의 수업 <span><span class="sm" id="tdNow" style="font-size:12px;font-weight:400;color:var(--sub)"></span> <button class="small" id="tdRef">🔄 새로고침</button></span></h2>
     <div id="todayBody"></div>
   </section>
 
   <section class="card sw" id="subwayCard">
-    <h2>🚇 지하철 2호선 <span class="sm" id="swNow"></span></h2>
+    <h2>🚇 지하철 2호선 <span><span class="sm" id="swNow"></span> <button class="small" id="swRef" title="지금 시각으로 새로고침">🔄 새로고침</button></span></h2>
     <div class="tabs" id="swSt"></div>
     <div class="tabs" id="swDay"></div>
     <div id="swBody"></div>
@@ -612,6 +612,7 @@ const nowMin=()=>{const d=new Date();return d.getHours()*60+d.getMinutes()+d.get
 
 // --- 오늘의 수업 ---
 function renderToday(){
+  $('tdNow').textContent=F(Math.floor(nowMin()))+' 기준';
   let list=[];try{list=JSON.parse(localStorage.getItem('kmuTimetable.v1'))||[]}catch(e){}
   const di=todayIdx(),n=nowMin();
   const rows=[];
@@ -641,7 +642,9 @@ const autoDay=()=>{const d=new Date().getDay();return d===0?'ho':d===6?'sa':'wk'
 const DL={wk:'평일',sa:'토요일',ho:'일·공휴일'};
 function nextOf(arr,n,k){const r=[];for(const m of arr){if(m>n){r.push(m);if(r.length>=k)break}}return r}
 function dest(stn,dir,m){if(dir==='up')return '문양';const last={gm:23*60+29,gc:23*60+27}[stn];return m===last?'수성구청':'영남대'}
+let swOpen={};
 function renderSub(){
+  document.querySelectorAll('#swBody details').forEach((d,i)=>{swOpen[i]=d.open});
   const type=dt||autoDay(),n=nowMin();
   $('swNow').textContent=F(Math.floor(n))+' 기준';
   $('swSt').innerHTML=Object.keys(ST).map(k=>`<button class="${k===st?'on':''}" data-s="${k}">${ST[k]}역</button>`).join('');
@@ -660,6 +663,7 @@ function renderSub(){
     const nm=live?nx[0]:null;
     const tbl=Object.keys(byH).map(h=>`<b>${String(h).padStart(2,'0')}시</b><span>${byH[h].map(m=>{const c=nm===m?'nxt':(live&&m<=n?'past':'');return `<span class="${c}">${String(m%60).padStart(2,'0')}</span>`}).join(' ')}</span>`).join('');
     return `<div class="dir"><b>${lab}</b><div class="nx">${big}</div><details><summary class="sm" style="cursor:pointer;margin-top:4px">${DL[type]} 전체 시간표 (${arr.length}회)</summary><div class="tbl">${tbl}</div></details></div>`}).join('');
+  document.querySelectorAll('#swBody details').forEach((d,i)=>{if(swOpen[i])d.open=true});
   $('swNote').innerHTML='※ 대구교통공사 시간표(2026.10.01 확인본) 기준, 평일·토요일·일요일/공휴일별로 나뉩니다. 공휴일은 자동으로 알 수 없으니 "일·공휴일" 버튼을 눌러 주세요. 강창역 토요일·일요일 시간은 계명대역 시간에서 ±2분으로 계산한 값입니다. 마지막 열차는 수성구청행입니다. 실제 운행은 역 게시 시간표와 공지를 확인하세요.';
 }
 $('swSt').onclick=e=>{const b=e.target.closest('[data-s]');if(b){st=b.dataset.s;renderSub()}};
@@ -693,8 +697,12 @@ $('pkGo').onclick=()=>{const r=filt(),el=$('pkRes');el.hidden=false;
   $('pkGo').textContent='🎲 다시 뽑기'};
 
 pkInit();renderToday();renderSub();
-setInterval(()=>{renderToday();renderSub()},30000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderToday();renderSub()}});
+let lastMin=-1;
+function tick(){const m=Math.floor(nowMin());if(m!==lastMin){lastMin=m;renderToday();renderSub()}}
+setInterval(tick,1000);
+$('swRef').onclick=$('tdRef').onclick=()=>{lastMin=-1;tick()};
+window.addEventListener('focus',()=>{lastMin=-1;tick()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){lastMin=-1;tick()}});
 window.addEventListener('storage',e=>{if(e.key==='kmuTimetable.v1')renderToday()});
 // 시간표를 고칠 때 같은 화면에서도 갱신되도록 저장 호출을 감시
 const _set=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){_set.call(this,k,v);if(k==='kmuTimetable.v1')renderToday()};
