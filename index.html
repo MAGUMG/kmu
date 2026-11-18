@@ -237,7 +237,7 @@ const DEFAULT={
     {n:'CTL',u:'https://ctl.kmu.ac.kr/index.jsp',i:'💻'},
     {n:'Story+',u:'https://story.kmu.ac.kr/main.do',i:'📊'},
     {n:'AI',u:'https://ai.kmu.ac.kr/',i:'🤖'},
-    {n:'공지사항',u:'https://www.example.ac.kr/notice',i:'📢'}
+    {n:'EDWARD 시스템',u:'https://edward.kmu.ac.kr/',i:'🖥️'}
   ],
   places:[
     {id:'p1',name:'바우어관',hours:'',type:'paid'},
@@ -364,7 +364,7 @@ let S=load(), place=S.places[0]?.id, day=new Date().getDay(), editing=false;
 const $=id=>document.getElementById(id);
 
 function load(){
-  try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.links){s.places.forEach(p=>{if(!p.type)p.type=(p.name==='기숙사식당')?'meal':'paid'});s.menu=s.menu||{};if(s.places.some(p=>p.id==='p1')){const m1=s.menu.p1=s.menu.p1||{};const it=m1.items||[];if((m1.ver||0)<3&&(!it.length||((it.length===10||it.length===32)&&it[1]&&it[1].n==='라면'))){m1.items=DEFAULT.menu.p1.items;m1.ver=3}}if(s.places.some(p=>p.id==='p3')){const m3=s.menu.p3=s.menu.p3||{};if(!(m3.items||[]).length){m3.items=DEFAULT.menu.p3.items;m3.ver=1}}return s}}catch(e){}
+  try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.links){s.links.forEach(l=>{if(l.n==='공지사항'&&l.u==='https://www.example.ac.kr/notice'){l.n='EDWARD 시스템';l.u='https://edward.kmu.ac.kr/';if(l.i==='📢')l.i='🖥️'}});s.places.forEach(p=>{if(!p.type)p.type=(p.name==='기숙사식당')?'meal':'paid'});s.menu=s.menu||{};if(s.places.some(p=>p.id==='p1')){const m1=s.menu.p1=s.menu.p1||{};const it=m1.items||[];if((m1.ver||0)<3&&(!it.length||((it.length===10||it.length===32)&&it[1]&&it[1].n==='라면'))){m1.items=DEFAULT.menu.p1.items;m1.ver=3}}if(s.places.some(p=>p.id==='p3')){const m3=s.menu.p3=s.menu.p3||{};if(!(m3.items||[]).length){m3.items=DEFAULT.menu.p3.items;m3.ver=1}}return s}}catch(e){}
   return JSON.parse(JSON.stringify(DEFAULT));
 }
 function save(){localStorage.setItem(KEY,JSON.stringify(S))}
