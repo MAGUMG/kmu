@@ -495,19 +495,16 @@ $('dayTabs').onclick=e=>{const b=e.target.closest('[data-d]');if(b){day=+b.datas
 $('meals').addEventListener('toggle',e=>{const d=e.target;if(!d.dataset||!d.dataset.k)return;d.open?openC.add(d.dataset.k):openC.delete(d.dataset.k);try{sessionStorage.setItem('openC',JSON.stringify([...openC]))}catch(x){}},true);
 $('newtab').onchange=e=>{S.newTab=e.target.checked;save();render()};
 
-// 메뉴 수정 기능 비활성화
-      const mm=line.match(/^(.*?)[\s,:]+([\d,]+)\s*원?$/);
-      if(mm&&mm[1].trim())return {n:mm[1].trim(),p:parseInt(mm[2].replace(/,/g,''),10)};
-      return {n:line,p:null};
-    });
-    S.menu[pid]=S.menu[pid]||{};S.menu[pid].items=list;
-    place=pid;save();render();return;
-  }
-  const days=$('mAll').checked?[1,2,3,4,5]:[+$('mDay').value];
-  S.menu[pid]=S.menu[pid]||{};
-  days.forEach(d=>{S.menu[pid][d]=S.menu[pid][d]||{};S.menu[pid][d][k]=items});
-  place=pid;save();render();
-};
+// 메뉴 수정 기능 비활성화 (로그인 연동을 위해 버튼 제거됨)
+const openC=new Set(JSON.parse(sessionStorage.getItem('openC')||'[]'));
+function renderPaid(items){
+  const row=x=>`<div class="price"><span>${esc(x.n)}</span><span>${x.p!=null?x.p.toLocaleString('ko-KR')+'원':''}</span></div>`;
+  let out='',cur=null;
+  const flush=()=>{if(!cur)return;const k=place+'|'+cur.h;out+=`<details class="corner" data-k="${esc(k)}" ${openC.has(k)?'open':''}><summary><span>${esc(cur.h)}<small>${cur.rows.length}개</small></span></summary>${cur.rows.map(row).join('')}</details>`;cur=null};
+  items.forEach(x=>{if(x.h){flush();cur={h:x.h,rows:[]}}else if(cur)cur.rows.push(x);else out+=row(x)});
+  flush();return out;
+}
+function isPaid(id){const p=S.places.find(x=>x.id===id);return !!p&&p.type==='paid'}
 
 // ══════════════════════════════════════════════════════
 // PIN 로그인 / 회원가입 / Firebase 동기화
@@ -608,7 +605,7 @@ $('newtab').onchange=e=>{S.newTab=e.target.checked;save();render()};
     if(k==='del'){pinBuf=pinBuf.slice(0,-1);}
     else if(k==='ok'){await tryLogin(pinBuf);pinBuf='';}
     else if(/^[0-9]$/.test(k)&&pinBuf.length<4){
-      pinBuf+=k;
+      pinBuf+=k;updateDots();
       if(pinBuf.length===4)await tryLogin(pinBuf).then(()=>{pinBuf='';});
     }
     updateDots();
