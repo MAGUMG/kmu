@@ -121,13 +121,92 @@ label{font-size:13px;color:var(--sub)}
 .pk .chk{display:flex;align-items:center;gap:6px;font-size:12.5px;margin:4px 0}
 .pk .chk input{width:auto;margin:0}
 .pk .lst{max-height:260px;overflow-y:auto;margin-top:10px;font-size:13px}
+
+/* ── PIN 로그인 UI ── */
+#loginOverlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center}
+#loginBox{background:var(--card);border-radius:18px;padding:28px 24px;width:min(340px,92vw);box-shadow:0 8px 32px rgba(0,0,0,.2);text-align:center}
+#loginBox h2{margin:0 0 6px;font-size:20px}
+#loginBox p{color:var(--sub);font-size:13px;margin:0 0 20px}
+.pin-dots{display:flex;justify-content:center;gap:14px;margin-bottom:16px}
+.pin-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);transition:background .15s}
+.pin-dot.filled{background:var(--main);border-color:var(--main)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:220px;margin:0 auto 16px}
+.pin-key{font-size:20px;font-weight:600;padding:12px 0;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);cursor:pointer;transition:background .1s}
+.pin-key:active{background:var(--main);color:#fff}
+#pinMsg{font-size:13px;color:#ef4444;min-height:18px;margin-bottom:8px}
+#loginUserInfo{display:flex;align-items:center;gap:8px;justify-content:flex-end;font-size:13px;color:var(--sub)}
+#loginUserInfo button{padding:4px 10px;font-size:12px}
 </style>
+<!-- Firebase SDK (Modular v10) -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getDatabase, ref, set, get, onValue } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+  // !! 아래 설정을 본인 Firebase 프로젝트 값으로 교체하세요 !!
+  // Firebase Console -> 프로젝트 설정 -> 앱 추가(웹) -> firebaseConfig 복사
+  const firebaseConfig = {
+  apiKey: "AIzaSyCd8Qx5sVkDeHQPJ4cdg_tzxebIYbhv2II",
+  authDomain: "kmu-login-system.firebaseapp.com",
+  databaseURL: "https://kmu-login-system-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "kmu-login-system",
+  storageBucket: "kmu-login-system.firebasestorage.app",
+  messagingSenderId: "466723392931",
+  appId: "1:466723392931:web:bd62587dc8629cebad5e16"
+};
+
+  try {
+    const app = initializeApp(firebaseConfig);
+    const db  = getDatabase(app);
+    window._fbDb      = db;
+    window._fbRef     = ref;
+    window._fbSet     = set;
+    window._fbGet     = get;
+    window._fbOnValue = onValue;
+    window._fbReady   = true;
+    document.dispatchEvent(new Event('fb-ready'));
+  } catch(e) {
+    console.warn('Firebase 초기화 실패:', e.message);
+    window._fbReady = false;
+    document.dispatchEvent(new Event('fb-ready'));
+  }
+</script>
 </head>
 <body>
 <header>
   <div><h1>🎓 계명대학교</h1><div id="today"></div></div>
   <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="newtab" style="width:auto;margin:0" checked> 링크를 새 탭에서 열기</label>
+  <div id="loginUserInfo" style="display:none"></div>
 </header>
+<!-- PIN 로그인 오버레이 -->
+<div id="loginOverlay">
+  <div id="loginBox">
+    <h2>🔐 로그인 / 회원가입</h2>
+    <p id="loginSubtitle">PIN 4자리를 입력하세요<br><small style="color:var(--sub)">처음이면 PIN을 입력하면 계정이 만들어져요</small></p>
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div id="pinMsg"></div>
+    <div class="pin-pad" id="pinPad">
+      <button class="pin-key" data-k="1">1</button>
+      <button class="pin-key" data-k="2">2</button>
+      <button class="pin-key" data-k="3">3</button>
+      <button class="pin-key" data-k="4">4</button>
+      <button class="pin-key" data-k="5">5</button>
+      <button class="pin-key" data-k="6">6</button>
+      <button class="pin-key" data-k="7">7</button>
+      <button class="pin-key" data-k="8">8</button>
+      <button class="pin-key" data-k="9">9</button>
+      <button class="pin-key" data-k="del" style="font-size:15px">⌫</button>
+      <button class="pin-key" data-k="0">0</button>
+      <button class="pin-key" data-k="ok" style="font-size:13px;background:var(--main);color:#fff;border-color:var(--main)">확인</button>
+    </div>
+    <p class="note" style="margin:0;font-size:12px">PIN은 계정 ID를 만드는 데 사용됩니다.<br>같은 PIN = 같은 계정이므로 외부에 노출하지 마세요.</p>
+  </div>
+</div>
+
 
 <main>
   <section class="card wd" id="todayCard">
@@ -144,7 +223,7 @@ label{font-size:13px;color:var(--sub)}
   </section>
 
   <section class="card" id="menuCard">
-    <h2>🍚 학식 메뉴 <span><button class="small" id="editMenuBtn">메뉴 수정</button></span></h2>
+    <h2>🍚 학식 메뉴 <span id="menuSyncStatus" style="font-size:12px;font-weight:400;color:var(--sub)"></span></h2>
     <div class="tabs" id="placeTabs"></div>
     <div class="tabs" id="dayTabs"></div>
     <p class="hours" id="hours"></p>
@@ -198,16 +277,6 @@ label{font-size:13px;color:var(--sub)}
 </main>
 
 
-<!-- 메뉴 수정 -->
-<dialog id="menuDlg"><form method="dialog" id="menuForm">
-  <h3>메뉴 수정</h3>
-  <label>식당</label><select id="mPlace"></select>
-  <div id="mDayWrap"><label>요일</label><select id="mDay"></select>
-  <label>식사</label><select id="mMeal"><option value="b">조식</option><option value="l">중식</option><option value="d">석식</option></select></div>
-  <label id="mLabel">메뉴 (한 줄에 하나)</label><textarea id="mText"></textarea>
-  <label id="mAllWrap"><input type="checkbox" id="mAll" style="width:auto;margin:0"> 월~금 모두 같은 메뉴로 저장</label>
-  <div class="row"><button value="cancel" formnovalidate>닫기</button><button class="primary" value="ok">저장</button></div>
-</form></dialog>
 
 
 
@@ -360,14 +429,22 @@ const DEFAULT={
       {n:'감자튀김',p:2500}],ver:1}
   }
 };
-let S=load(), place=S.places[0]?.id, day=new Date().getDay(), editing=false;
 const $=id=>document.getElementById(id);
+let S=load(), place=S.places[0]?.id, day=new Date().getDay();
+let _currentUser=null; // 로그인된 PIN 해시 (null = 비로그인)
 
 function load(){
   try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.links){s.links.forEach(l=>{if(l.n==='공지사항'&&l.u==='https://www.example.ac.kr/notice'){l.n='EDWARD 시스템';l.u='https://edward.kmu.ac.kr/';if(l.i==='📢')l.i='🖥️'}});s.places.forEach(p=>{if(!p.type)p.type=(p.name==='기숙사식당')?'meal':'paid'});s.menu=s.menu||{};if(s.places.some(p=>p.id==='p1')){const m1=s.menu.p1=s.menu.p1||{};const it=m1.items||[];if((m1.ver||0)<3&&(!it.length||((it.length===10||it.length===32)&&it[1]&&it[1].n==='라면'))){m1.items=DEFAULT.menu.p1.items;m1.ver=3}}if(s.places.some(p=>p.id==='p3')){const m3=s.menu.p3=s.menu.p3||{};if(!(m3.items||[]).length){m3.items=DEFAULT.menu.p3.items;m3.ver=1}}return s}}catch(e){}
   return JSON.parse(JSON.stringify(DEFAULT));
 }
-function save(){localStorage.setItem(KEY,JSON.stringify(S))}
+function save(){
+  localStorage.setItem(KEY,JSON.stringify(S));
+  if(_currentUser && window._fbReady){
+    const path='users/'+_currentUser+'/data';
+    window._fbSet(window._fbRef(window._fbDb, path), JSON.parse(JSON.stringify(S)))
+      .catch(e=>console.warn('Firebase save error',e));
+  }
+}
 function esc(t){return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function safeUrl(u){
   u=u.trim(); if(!/^https?:\/\//i.test(u)) u='https://'+u;
@@ -409,7 +486,7 @@ function render(){
     $('meals').innerHTML=items.length?renderPaid(items):'<div class="meal"><span class="none">등록된 메뉴 없음</span></div>';
   } else
   $('meals').innerHTML=p?dormHtml():'';
-  $('menuNote').innerHTML=paid?'※ 메뉴와 가격은 직접 입력한 값이며, 이 브라우저에 저장됩니다.':(DORM?`※ ${esc(DORM.title||'주간 식단표')} · 갱신 ${esc(DORM.updated||'')} · <a href="${esc(DORM.source||'#')}" target="_blank" rel="noopener noreferrer">원문 보기</a><br>식단은 부식 수급 사정에 따라 변경될 수 있습니다.`:'');
+  $('menuNote').innerHTML=paid?(_currentUser?'※ 메뉴와 가격은 직접 입력한 값이며, 클라우드에 동기화됩니다.':'※ 메뉴와 가격은 직접 입력한 값이며, 이 브라우저에만 저장됩니다.'):(DORM?`※ ${esc(DORM.title||'주간 식단표')} · 갱신 ${esc(DORM.updated||'')} · <a href="${esc(DORM.source||'#')}" target="_blank" rel="noopener noreferrer">원문 보기</a><br>식단은 부식 수급 사정에 따라 변경될 수 있습니다.`:'');
   // 링크
   $('links').innerHTML=S.links.map((l,i)=>`<div class="link"><a href="${esc(l.u)}" ${S.newTab?'target="_blank" rel="noopener noreferrer"':''}><span>${esc(l.i||'🔗')}</span>${esc(l.n)}</a></div>`).join('');}
 
@@ -418,45 +495,7 @@ $('dayTabs').onclick=e=>{const b=e.target.closest('[data-d]');if(b){day=+b.datas
 $('meals').addEventListener('toggle',e=>{const d=e.target;if(!d.dataset||!d.dataset.k)return;d.open?openC.add(d.dataset.k):openC.delete(d.dataset.k);try{sessionStorage.setItem('openC',JSON.stringify([...openC]))}catch(x){}},true);
 $('newtab').onchange=e=>{S.newTab=e.target.checked;save();render()};
 
-// 메뉴 수정
-const openC=new Set(JSON.parse(sessionStorage.getItem('openC')||'[]'));
-function renderPaid(items){
-  const row=x=>`<div class="price"><span>${esc(x.n)}</span><span>${x.p!=null?x.p.toLocaleString('ko-KR')+'원':''}</span></div>`;
-  let out='',cur=null;
-  const flush=()=>{if(!cur)return;const k=place+'|'+cur.h;out+=`<details class="corner" data-k="${esc(k)}" ${openC.has(k)?'open':''}><summary><span>${esc(cur.h)}<small>${cur.rows.length}개</small></span></summary>${cur.rows.map(row).join('')}</details>`;cur=null};
-  items.forEach(x=>{if(x.h){flush();cur={h:x.h,rows:[]}}else if(cur)cur.rows.push(x);else out+=row(x)});
-  flush();return out;
-}
-function isPaid(id){const p=S.places.find(x=>x.id===id);return !!p&&p.type==='paid'}
-function fillMenuForm(){
-  const pd=isPaid($('mPlace').value);
-  $('mDayWrap').style.display=pd?'none':'block';
-  $('mAllWrap').style.display=pd?'none':'block';
-  $('mLabel').textContent=pd?'메뉴와 가격 (한 줄에 하나, 예: 돈까스 6000, 코너는 < A 코너 >)':'메뉴 (한 줄에 하나)';
-  $('mText').placeholder=pd?'돈까스 6000\n김치찌개 5500':'';
-  if(pd){
-    const it=(S.menu[$('mPlace').value]||{}).items||[];
-    $('mText').value=it.map(x=>x.h?'< '+x.h+' >':(x.p!=null?x.n+' '+x.p:x.n)).join('\n');
-    return;
-  }
-  const m=((S.menu[$('mPlace').value]||{})[$('mDay').value]||{})[$('mMeal').value]||[];
-  $('mText').value=m.join('\n');
-}
-$('editMenuBtn').onclick=()=>{
-  if(!S.places.length){alert('먼저 식당을 추가하세요.');return}
-  $('mPlace').innerHTML=S.places.filter(p=>p.type==='paid').map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
-  $('mDay').innerHTML=[1,2,3,4,5,6,0].map(i=>`<option value="${i}">${DAYS[i]}요일</option>`).join('');
-  $('mPlace').value=isPaid(place)?place:S.places.find(p=>p.type==='paid').id;$('mDay').value=day;$('mAll').checked=false;
-  fillMenuForm();$('menuDlg').showModal();
-};
-['mPlace','mDay','mMeal'].forEach(id=>$(id).onchange=fillMenuForm);
-$('menuForm').onsubmit=e=>{
-  if(e.submitter?.value!=='ok')return;
-  const pid=$('mPlace').value,k=$('mMeal').value;
-  const items=$('mText').value.split('\n').map(s=>s.trim()).filter(Boolean);
-  if(isPaid(pid)){
-    const list=items.map(line=>{
-      const hm=line.match(/^<\s*(.*?)\s*>$/);if(hm)return {h:hm[1]};
+// 메뉴 수정 기능 비활성화
       const mm=line.match(/^(.*?)[\s,:]+([\d,]+)\s*원?$/);
       if(mm&&mm[1].trim())return {n:mm[1].trim(),p:parseInt(mm[2].replace(/,/g,''),10)};
       return {n:line,p:null};
@@ -469,6 +508,116 @@ $('menuForm').onsubmit=e=>{
   days.forEach(d=>{S.menu[pid][d]=S.menu[pid][d]||{};S.menu[pid][d][k]=items});
   place=pid;save();render();
 };
+
+// ══════════════════════════════════════════════════════
+// PIN 로그인 / 회원가입 / Firebase 동기화
+// ══════════════════════════════════════════════════════
+(async function initAuth(){
+  // SHA-256 해시 (PIN → 계정ID)
+  async function sha256(msg){
+    const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(msg));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+
+  const overlay=$('loginOverlay');
+  const pinMsg=$('pinMsg');
+  let pinBuf='';
+
+  function updateDots(){
+    for(let i=0;i<4;i++) $('pd'+i).classList.toggle('filled', i<pinBuf.length);
+  }
+
+  async function tryLogin(pin){
+    if(pin.length!==4){pinMsg.textContent='PIN 4자리를 입력하세요';return;}
+    pinMsg.textContent='확인 중...';
+    const hash=await sha256('kmu-campus-pin-'+pin);
+    const uid=hash.slice(0,16);
+
+    // Firebase가 준비될 때까지 대기 (최대 5초)
+    if(!window._fbReady){
+      await new Promise((res,rej)=>{
+        const t=setTimeout(()=>rej(new Error('timeout')),5000);
+        document.addEventListener('fb-ready',()=>{clearTimeout(t);res()},{once:true});
+      }).catch(()=>{});
+    }
+
+    if(!window._fbReady){
+      // Firebase 미연결 → 로컬 전용 모드
+      pinMsg.textContent='⚠ 오프라인 모드 (동기화 불가)';
+      _currentUser=uid;
+      overlay.style.display='none';
+      showUserInfo(pin);
+      return;
+    }
+
+    try{
+      const snap=await window._fbGet(window._fbRef(window._fbDb,'users/'+uid+'/data'));
+      if(snap.exists()){
+        // 기존 계정 → 클라우드 데이터 로드
+        S=snap.val();
+        localStorage.setItem(KEY,JSON.stringify(S));
+        place=S.places[0]?.id;
+      } else {
+        // 신규 계정 → 현재 로컬 데이터를 클라우드에 저장
+        await window._fbSet(window._fbRef(window._fbDb,'users/'+uid+'/data'), JSON.parse(JSON.stringify(S)));
+      }
+      _currentUser=uid;
+
+      // 실시간 동기화 구독
+      window._fbOnValue(window._fbRef(window._fbDb,'users/'+uid+'/data'), snap2=>{
+        if(!snap2.exists())return;
+        const remote=snap2.val();
+        // 다른 기기에서 변경된 경우에만 반영
+        if(JSON.stringify(remote)!==JSON.stringify(S)){
+          S=remote;
+          place=S.places.find(p=>p.id===place)?place:S.places[0]?.id;
+          render();
+          const st=$('menuSyncStatus');
+          if(st){st.textContent='✅ 동기화됨';setTimeout(()=>{st.textContent=''},2000);}
+        }
+      });
+
+      overlay.style.display='none';
+      showUserInfo(pin);
+      render();
+    }catch(e){
+      pinMsg.textContent='오류: '+e.message;
+      _currentUser=null;
+    }
+  }
+
+  function showUserInfo(pin){
+    const ui=$('loginUserInfo');
+    ui.style.display='flex';
+    ui.innerHTML=`<span>PIN <b>${pin.slice(0,2)}**</b> 로 로그인됨</span><button onclick="doLogout()">로그아웃</button>`;
+  }
+
+  window.doLogout=function(){
+    _currentUser=null;
+    $('loginUserInfo').style.display='none';
+    pinBuf='';updateDots();
+    pinMsg.textContent='';
+    overlay.style.display='flex';
+  };
+
+  // 키패드 클릭 이벤트
+  $('pinPad').onclick=async e=>{
+    const btn=e.target.closest('[data-k]');
+    if(!btn)return;
+    const k=btn.dataset.k;
+    if(k==='del'){pinBuf=pinBuf.slice(0,-1);}
+    else if(k==='ok'){await tryLogin(pinBuf);pinBuf='';}
+    else if(/^[0-9]$/.test(k)&&pinBuf.length<4){
+      pinBuf+=k;
+      if(pinBuf.length===4)await tryLogin(pinBuf).then(()=>{pinBuf='';});
+    }
+    updateDots();
+  };
+
+  updateDots();
+  // 오버레이 표시
+  overlay.style.display='flex';
+})();
 
 render();
 </script>
